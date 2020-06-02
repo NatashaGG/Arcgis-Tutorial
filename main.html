@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>ArcGIS JavaScript Tutorials: Create a JavaScript starter app</title>
+    <style>
+      html, body, #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.15/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.15/"></script>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/SceneView",
+        "esri/widgets/BasemapToggle",
+        "esri/widgets/BasemapGallery",
+        "esri/layers/FeatureLayer"
+      ], function(Map, SceneView, BasemapToggle, BasemapGallery, FeatureLayer) {
+  
+        var map = new Map({
+          basemap: "topo-vector",
+          ground: "world-elevation"  // show elevation
+        });
+  
+        var view = new SceneView({
+          container: "viewDiv",
+          map: map,
+          camera: {
+            position: {  // observation point
+              x: -118.80800,
+              y: 33.96100,
+              z: 25000 // altitude in meters
+            },
+            tilt: 65  // perspective in degrees
+          }
+        });
+
+        /*var basemapToggle = new BasemapToggle({
+          view: view,
+          nextBasemap: "satellite"
+        });
+
+        view.ui.add(basemapToggle, "bottom-right"); */
+
+        var basemapGallery = new BasemapGallery({
+          view: view,
+          source: {
+            portal: {
+              url: "https://www.arcgis.com",
+              useVectorBasemaps: true // Loads vector tile basemaps
+            }
+          }
+        });
+
+        view.ui.add(basemapGallery, "top-right");
+
+        // Trailheads feature Layer (points)
+        var trailheadsLayer = new FeatureLayer({
+          url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trailheads/FeatureServer/0"
+        });
+
+        map.add(trailheadsLayer);
+
+        // Trails feature Layer (lines)
+        var trailsLayer = new FeatureLayer({
+          url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trails/FeatureServer/0",
+          definitionExpression: "ELEV_GAIN < 250",
+
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "simple-line",
+              color: "green",
+              width: "2px"
+            }
+          },
+
+          outFields: ["TRL_NAME", "ELEV_GAIN"],
+
+          popupTemplate: {
+            title: "{TRL_NAME}", // Show attribute value
+            content: "The trail elevation gain is {ELEV_GAIN} ft." // Display text in pop-up
+          }
+        });
+
+        map.add(trailsLayer, 0);
+
+        // Parks and open spaces (polygons)
+        var parksLayer = new FeatureLayer({
+          url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Parks_and_Open_Space/FeatureServer/0"
+        });
+
+        map.add(parkLayer, 0);
+
+        var trailheadsRenderer = {
+          type: "simple",
+          symbol: {
+            type: "picture-marker",
+            url: "http://static.arcgis.com/images/Symbols/NPS/npsPictograph_0231b.png",
+            width: "18px",
+            height: "18px"
+          }
+        };
+
+        var trailheadsLabels = {
+          symbol: {
+            type: "text",
+            color: "#FFFFFF",
+            haloColor: "#5E8D74",
+            haloSize: "2px",
+            font: {
+              size: "12px",
+              family: "Noto Sans",
+              style: "italic",
+              weight: "normal"
+            }
+          },
+          labelPlacement: "above-center",
+          labelExpressionInfo: {
+            expression: "$feature.TRL_NAME"
+          }
+        };
+
+        var trailheads = new FeatureLayer({
+          url: "https://services3.arcgis.com/GVgbJbqm8hXASVYi/arcgis/rest/services/Trailheads/FeatureServer/0",
+          renderer: trailheadsRenderer,
+          labelingInfo: [trailheadsLabels]
+        });
+
+        map.add(trailheads);
+      }); 
+    </script>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
